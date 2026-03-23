@@ -1,0 +1,172 @@
+<html>
+
+<head>
+    <title>Downloader</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/index.css">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/style.css">
+    <style>
+        body {
+            padding: 2rem;
+        }
+
+        input[type="text"] {
+            width: 30rem;
+            max-width: calc(100% - 2rem);
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            background-color: #383838;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            background-color: #4a4a4a;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .current_download {
+            background-color: rgb(201, 65, 15);
+        }
+
+        .tag {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header">
+        <div id="banner">
+            <div id="logo">
+                <a id="title" href="{{url_base}}">E6</a>
+                <span id="title2">
+                    <img class="icon" src="{{url_base}}/static/download.svg" style="height: 1.5rem;">Downloader
+                </span>
+            </div>
+            <div class="hamburger_btn" onclick="toggle_menu()">
+                <img class="icon" src="{{url_base}}/static/menu.svg">
+            </div>
+        </div>
+    </div>
+    <div id="content">
+        <div>
+            <span>
+                Enter the URL or post ID or tag to download. <br>
+                <span class="tag">{tag}</span> or <span class="tag">https://e621.net/posts?tags={tag}</span>: download
+                all
+                posts with the tag, if mutiple tags are given, first one will be used. <br>
+                <span class="tag">{post ID}</span> or <span class="tag">https://e621.net/posts/{post ID}</span>:
+                download
+                the post with the ID, only one post will be downloaded. Artist name will be used as main tag.<br>
+            </span>
+        </div>
+        <br>
+        <input type="text" id="download_input" placeholder="Enter URL to download..."
+            onkeydown="download_on_enter_key(event)">
+        <button id="download_btn" onclick="download()">Download</button>
+        <br>
+        <br>
+        <div id="download_status"></div>
+        <h2>Download Queue</h2>
+        <div id="download_queue"></div>
+    </div>
+    
+    <div id="menu_backdrop" onclick="hide_menu()" onmousewheel="hide_menu()"></div>
+    <div id="menu">
+        <a class="long_btn" href="{{url_base}}?tags=fav:me">
+            <img class="icon" src="{{url_base}}/static/star_holo.svg">
+            <span>Favorites</span>
+        </a>
+
+        <a class="long_btn" href="{{url_base}}/all_tags">
+            <img class="icon" src="{{url_base}}/static/tag.svg">
+            <span>All Tags</span>
+        </a>
+
+        <a class="long_btn" href="{{url_base}}/pools">
+            <img class="icon" src="{{url_base}}/static/pool.svg">
+            <span>All Pools</span>
+        </a>
+    </div>
+    <script src="{{url_base}}/static/script.js"></script>
+    <script>
+        const download_input = document.getElementById('download_input')
+        const download_status = document.getElementById('download_status');
+        const download_queue = document.getElementById('download_queue');
+        function download() {
+            url = download_input.value;
+            if (url) {
+                fetch('{{url_base}}/downloader', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ "input": url })
+                }).then(response => {
+                    if (response.ok) {
+                        download_status.innerHTML = "Download started...";
+                        download_input.value = "";
+                        return response.json();
+                    } else {
+                        throw new Error('Network response was not ok');
+                    }
+                }).then(data => {
+                    console.log(data);
+                    get_queue();
+                }).catch(error => {
+                    download_status.innerHTML = "Error: " + error.message;
+                });
+
+            }
+        }
+
+        function download_on_enter_key(e) {
+            if (e.key === 'Enter') {
+                download();
+            }
+        }
+
+        function get_queue() {
+            fetch('{{url_base}}/downloader?json=', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Network response was not ok');
+                }
+            }).then(data => {
+                download_queue.innerHTML = "";
+                data = data.data;
+                // console.log(data.length);
+                for (let i = 0; i < data.length; i++) {
+                    if (i == 0) {
+                        download_queue.innerHTML += "<div class='qitem tag current_download'>" + data[i] + "</div> ";
+                    }
+                    else {
+                        download_queue.innerHTML += "<div class='qitem tag'>" + data[i] + "</div> ";
+                    }
+                }
+                if (data.length == 0) {
+                    download_queue.innerHTML = "<div class='qitem'>No downloads in queue</div>";
+                }
+
+            }).catch(error => {
+                download_status.innerHTML = "Error: " + error.message;
+            });
+        }
+        get_queue();
+        setInterval(get_queue, 10000);
+    </script>
+
+</html>

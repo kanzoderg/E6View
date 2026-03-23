@@ -1,0 +1,64 @@
+#media_container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+}
+
+#view_img {
+    position: absolute;
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+}
+
+#media_container {
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+#bottom_bar {
+    display: none;
+}
+
+ruffle-player {
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+}
+
+.page_btn {
+    position: fixed;
+    top: 30%;
+    width: 20%;
+    height: 40%;
+    line-height: 40%;
+    z-index: 2;
+    opacity: 0;
+    /* background-color: aqua; */
+    transition: opacity 0.3s;
+}
+
+.page_btn .icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) scale(1.5);
+}
+
+#prev_btn {
+    left: 0;
+}
+
+#prev_btn .icon {
+    left: 10%;
+}
+
+#next_btn {
+    right: 0;
+}
+
+#next_btn .icon {
+    right: 10%;
+}

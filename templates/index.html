@@ -1,0 +1,183 @@
+<html>
+
+<head>
+    <title> - </title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/index.css">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/style.css">
+    <link rel="manifest" href="{{url_base}}/e6.webmanifest" crossorigin="use-credentials">
+    <link rel="icon" type="image/svg+xml" href="{{url_base}}/static/e6.svg" class="favicon">
+</head>
+
+<body>
+    <div id="header">
+        <div id="banner">
+            <div id="logo">
+                <a id="title" href="{{url_base}}">E6</a>
+            </div>
+            <div class="hamburger_btn" onclick="toggle_menu()">
+                <img class="icon" src="{{url_base}}/static/menu.svg">
+            </div>
+        </div>
+        {% if pool_info %}
+        <div id="pool_info">
+            <h2 style="margin-bottom: 0.5rem;">{{ pool_info.name }}</h2>
+            {% if pool_info.description %}
+            <p>{{ pool_info.description }}</p>
+            {% endif %}
+        </div>
+        {% else %}
+        <div id="search_bar">
+            <input type="text" id="search_input" placeholder="Search...">
+            <div id="search_btn" class="btn" onclick="searchPosts()">
+                <img class="icon" src="{{url_base}}/static/right.svg">
+            </div>
+            <div id="close_btn" class="btn" onclick="search_input.value='';searchPosts();">
+                <img class="icon" src="{{url_base}}/static/close.svg">
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div id="posts" tabindex="0">
+        {% for post in posts %}
+        <a href="{{url_base}}/viewer/{{post[2]}}/{{post[0]}}_{{post[1]}}?q={{tags_args}}&page={{page}}" class="post grid-item"
+            data-id="{{post[0]}}"
+            data-file-url="{{url_base}}/thumb/{{post[2]}}/{{post[0]}}_{{post[1]}}"
+            data-thumb-url="{{url_base}}/thumb/{{post[2]}}/{{post[0]}}_{{post[1]}}" target="_blank">
+            <img class="thumb-img" src="{{url_base}}/thumb/{{post[2]}}/{{post[0]}}_{{post[1]}}" alt="{{post[0]}}"
+                loading="lazy">
+            {% if post[4]!="img" %}
+            <img src="{{url_base}}/static/play.svg" class="play_deco">
+            {% endif %}
+            {% if live and post[2]!="live" or show_score or post[-1] %}
+            <div class="corner_deco">
+                {% if show_score %}
+                <div class="score">{{post[3]}}</div>
+                {% endif %}
+                {% if live and post[2]!="live" %}
+                <img class="icon" src="{{url_base}}/static/saved.svg">
+                {% endif %}
+                {% if post[-1] %}
+                <img class="icon" src="{{url_base}}/static/star.svg">
+                {% endif %}
+            </div>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    <div id="menu_backdrop" onclick="hide_menu()" onmousewheel="hide_menu()"></div>
+    <div id="menu">
+        <a class="long_btn" href="{{url_base}}?tags=fav:me">
+            <img class="icon" src="{{url_base}}/static/star_holo.svg">
+            <span>Favorites</span>
+        </a>
+
+        <a class="long_btn" href="{{url_base}}/all_tags">
+            <img class="icon" src="{{url_base}}/static/tag.svg">
+            <span>All Tags</span>
+        </a>
+
+        <a class="long_btn" href="{{url_base}}/pools">
+            <img class="icon" src="{{url_base}}/static/pool.svg">
+            <span>All Pools</span>
+        </a>
+
+        <a id="external_link" class="long_btn" target="_blank">
+            <img class="icon" src="{{url_base}}/static/external.svg">
+            <span>View on e621</span>
+        </a>
+
+        {% if live %}
+        <a class="long_btn" onclick="download_from_live('https://e621.net/posts?tags='+tags[0])">
+            <img class="icon" src="{{url_base}}/static/plus.svg">
+            <span>Current Search to Downloader</span>
+        </a>
+        <a class="long_btn" href="{{url_base}}/downloader" target="_blank">
+            <img class="icon" src="{{url_base}}/static/download.svg">
+            <span>Downloader</span>
+        </a>
+        {% else %}
+        <a class="long_btn" href="{{url_base}}/downloader" target="_blank">
+            <img class="icon" src="{{url_base}}/static/download.svg">
+            <span>Downloader</span>
+        </a>
+        {% endif %}
+
+    </div>
+
+    <div id="footer">
+        <a class="btn" id="live_btn" style="left: 1rem; bottom: 8rem;" onclick="toggle_live()">
+            <img class="icon" src="{{url_base}}/static/live.svg">
+        </a>
+        <div id="page_cnt" class="long_btn" onclick="go_page()">{{page}}/{{max_page}}</div>
+        <a onclick="prev_page()" class="btn">
+            <img class="icon" src="{{url_base}}/static/left.svg">
+        </a>
+        <a onclick="next_page()" class="btn">
+            <img class="icon" src="{{url_base}}/static/right.svg">
+        </a>
+
+    </div>
+    <div class="cnt">
+        {{cnts}}-{{cnte}} of {{cnt}}
+    </div>
+
+    <div id="suggestions">
+
+    </div>
+    <div id="toast"></div>
+    <div id="context_menu">
+        {% if live %}
+        <div class="context_menu_item" onclick="add_to_downloader()">
+            <img class="icon" src="{{url_base}}/static/plus.svg">
+            <span>Add to Downloader</span>
+        </div>
+        {% endif %}
+        <div class="context_menu_item" onclick="to_main_tag()">
+            <img class="icon" src="{{url_base}}/static/tag.svg">
+            <span>Go to Main Tag</span>
+        </div>
+    </div>
+
+    <script>
+        tags = ["{{tags|safe}}"];
+        url_base = "{{url_base}}";
+        document.getElementById("external_link").href = "https://e621.net/posts?tags=" + tags.join(" ");
+        current_view_mode = '{{current_view_mode}}'; // "grid" or "detail"
+        current_page = {{ page }};
+        max_page = {{ max_page }};
+        {% if live %}
+        live = true;
+        // document.body.style.backgroundColor = "#152f56";
+        document.getElementById("live_btn").style.backgroundColor = "#1f3c67";
+        // document.getElementById("search_input").style.backgroundColor = "#1f3c67";
+        // document.getElementById("search_input").style.color = "#e8c446";
+
+        {% else %}
+        live = false;
+        {% endif %}
+        {% if pool_info %}
+        posts = document.getElementById("posts");
+        posts.style.top = "12rem";
+        {% endif %}
+
+        // Auto-focus on posts container for immediate keyboard control
+        document.getElementById("posts").focus();
+
+        // Add keyboard navigation for page changes
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowLeft') {
+                prev_page();
+            } else if (event.key === 'ArrowRight') {
+                next_page();
+            }
+        });
+    </script>
+    <script src="{{url_base}}/static/index.js"></script>
+    <script src="{{url_base}}/static/script.js"></script>
+    <script src="{{url_base}}/static/noreferer.js"></script>
+</body>
+
+</html>

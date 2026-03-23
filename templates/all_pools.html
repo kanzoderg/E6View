@@ -1,0 +1,100 @@
+<html>
+
+<head>
+    <title> - </title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/index.css">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/style.css">
+</head>
+
+<body style="padding: 2rem;">
+    <div id="header">
+        <div id="banner">
+            <div id="logo">
+                <a id="title" href="{{url_base}}">E6</a>
+                <span id="title2">
+                    <img class="icon" src="{{url_base}}/static/pool.svg" style="height: 1.5rem;">All Pools
+                </span>
+            </div>
+            <div class="hamburger_btn" onclick="toggle_menu()">
+                <img class="icon" src="{{url_base}}/static/menu.svg">
+            </div>
+        </div>
+        <div id="search_bar">
+            <input type="text" id="search_input" placeholder="Search..." value="{{q}}">
+            <div id="search_btn" class="btn" onclick="searchPools()">
+                <img class="icon" src="{{url_base}}/static/right.svg">
+            </div>
+            <div id="close_btn" class="btn" onclick="search_input.value='';searchPools();">
+                <img class="icon" src="{{url_base}}/static/close.svg">
+            </div>
+        </div>
+    </div>
+
+    <div id="menu_backdrop" onclick="hide_menu()" onmousewheel="hide_menu()"></div>
+    <div id="menu">
+        <a class="long_btn" href="{{url_base}}?tags=fav:me">
+            <img class="icon" src="{{url_base}}/static/star_holo.svg">
+            <span>Favorites</span>
+        </a>
+
+        <a class="long_btn" href="{{url_base}}/all_tags">
+            <img class="icon" src="{{url_base}}/static/tag.svg">
+            <span>All Tags</span>
+        </a>
+
+        <a id="external_link" class="long_btn" href="https://e621.net/pools/gallery" target="_blank">
+            <img class="icon" src="{{url_base}}/static/external.svg">
+            <span>Pools on e621</span>
+        </a>
+
+        <a class="long_btn" href="{{url_base}}/downloader" target="_blank">
+            <img class="icon" src="{{url_base}}/static/download.svg">
+            <span>Downloader</span>
+        </a>
+
+    </div>
+
+    <div id="content" style="top: 6rem;">
+        {% for pool in pools %}
+        <a class="pool-entry" href="{{url_base}}?tags=pool:{{pool['id']}}" target="_blank">
+            {% if pool['cover_file'] %}
+            <img src="{{url_base}}/thumb/{{pool['cover_file']}}" class="pool-cover">
+            {% endif %}
+            <div class="pool-text">
+                <h3>{{pool['name']}} ({{pool['post_count']}} posts)</h3>
+                <br>
+                {{pool['description']}}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    <div id="footer">
+        <div id="page_cnt" class="long_btn">{{current_page}}/{{max_page}}</div>
+        <a onclick="prev_page()" class="btn">
+            <img class="icon" src="{{url_base}}//static/left.svg">
+        </a>
+        <a onclick="next_page()" class="btn">
+            <img class="icon" src="{{url_base}}//static/right.svg">
+        </a>
+    </div>
+    <div id="toast"></div>
+    <script src="{{url_base}}/static/script.js"></script>
+    <script>
+        current_page = {{ current_page }};
+        max_page = {{ max_page }};
+        url_base = "{{url_base}}";
+        // enter to search
+        const searchInput = document.getElementById("search_input");
+        searchInput.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                searchPools();
+            }
+        });
+    </script>
+    <script src="{{url_base}}/static/all_pools.js"></script>
+    <script src="{{url_base}}/static/noreferer.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,314 @@
+<html>
+
+<head>
+    <title>view</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/style.css">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/view.css">
+</head>
+
+<body>
+    <div id="media_container">
+        {% if file_type=="vid" %}
+        <video id="view_img" src="{{url_base}}/file/{{user}}/{{file}}" alt="{{file}}" controls loop autoplay
+            preload="metadata" poster="{{url_base}}/thumb/{{user}}/{{file}}" onerror="handleVideoError(this)"></video>
+        <div id="video_loading"
+            style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px;">
+            Loading video...
+        </div>
+        {% elif file_type=="flash" %}
+        <div id="flash_container"></div>
+        <script src="{{url_base}}/static/ruffle.js"></script>
+        <script>
+            window.RufflePlayer = window.RufflePlayer || {};
+            window.addEventListener("load", (event) => {
+                const ruffle = window.RufflePlayer.newest();
+                const player = ruffle.createPlayer();
+                const container = document.getElementById("flash_container");
+                container.appendChild(player);
+                player.ruffle().load("{{url_base}}/file/{{user}}/{{file}}");
+            });
+        </script>
+        {% else %}
+        <img id="view_img" src="{{url_base}}/file/{{user}}/{{file}}" alt="{{file}}">
+        {% endif %}
+    </div>
+    <div class="hamburger_btn" onclick="go_back()" style="opacity: 0.4; right: 0.5rem; top: 0.5rem;">
+        <img class="icon" src="{{url_base}}/static/close.svg">
+    </div>
+    <div class="hamburger_btn" onclick="toggle_menu()" style="opacity: 0.4; left: 0.5rem; bottom: 1rem; top: unset;">
+        <img class="icon" src="{{url_base}}/static/menu.svg">
+    </div>
+    {% if user=='live' %}
+    <div id="download_btn" class="hamburger_btn" onclick="download_from_live('{{post_id}}')" style="opacity: 0.4; left: 3.1rem; bottom: 1rem; top: unset;">
+        <img class="icon" src="{{url_base}}/static/download.svg" style="scale: 0.9;">
+    </div>
+    {% else %}
+    <div id="fav_btn" class="hamburger_btn" onclick="add_fav()" style="opacity: 0.4; left: 3.1rem; bottom: 1rem; top: unset;">
+        <img id="fav_icon" class="icon" src="{{url_base}}/static/{% if fav %}star.svg{% else %}star_holo.svg{% endif %}" style="scale: 0.9;">
+    </div>
+    {% endif %}
+
+    <div id="menu_backdrop" onclick="hide_menu()" onmousewheel="hide_menu()"></div>
+    <div id="menu" style="left: 0.5rem; bottom: 4rem; top: unset; width: 40rem;">
+
+        <span class="viewer_score">score: {{score}}</span>
+        <br>
+        {% if post_id>0 %}
+        <a href="https://e621.net/posts/{{post_id}}" class="e621_url"
+        target="_blank">https://e621.net/posts/{{post_id}}
+        </a>
+        <br>
+        {% endif %}
+        {% if pools|length > 0 %}
+        pools containing this post:
+        <div class="tags_list">
+            {% for pool in pools %}
+            <a href="{{url_base}}/?tags=pool:{{pool[0]}}" class="tag pool_tag tag_highlight" target="_blank">
+                {{pool[1]}}
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        main tag:<a href="{{url_base}}/?tags={{artist}}{% if user=='live' %}&live=1{% endif %}" class="tag user_tag tag_highlight"
+                target="_blank">
+            {{artist}}
+        </a>
+        <div class="tags_list">
+            {% for tag in tags %}
+            <a href="{{url_base}}/?tags={{tag[0]}}{% if user=='live' %}&live=1{% endif %}" class="tag"
+                target="_blank">{{tag[0]}}
+                <span class="count">{{tag[1]}}</span>
+            </a>
+            {% endfor %}
+        </div>
+
+        <div class="divider"></div>
+        
+        <div class="long_btn" onclick="if (window.parent !== window) { window.parent.location = '{{url_base}}'; } else { location = '{{url_base}}'; }">
+            <img class="icon" src="{{url_base}}/static/home.svg">
+            <span>Home</span>
+        </div>
+        <div class="long_btn" onclick="toggle_fullscreen()">
+            <img class="icon" src="{{url_base}}/static/full.svg">
+            <span>Fullscreen</span>
+        </div>
+        <div class="long_btn" onclick="go_back()">
+            <img class="icon" src="{{url_base}}/static/close.svg">
+            <span>Close Window</span>
+        </div>
+    </div>
+    
+    <div id="toast"></div>
+
+    <script src="{{url_base}}/static/panzoom.js"></script>
+    <script src="{{url_base}}/static/view.js"></script>
+    <script src="{{url_base}}/static/script.js"></script>
+    <script>
+        url_base = "{{url_base}}";
+        file_type = "{{file_type}}";
+        
+        // Navigation data
+        const next_item = {% if next_item %}{{ next_item|tojson }}{% else %}null{% endif %};
+        const prev_item = {% if prev_item %}{{ prev_item|tojson }}{% else %}null{% endif %};
+        const q = "{{ q|safe }}";
+        const current_page = {{ page }};
+
+        const media_container = document.getElementById('media_container');
+        const view_img = document.getElementById('view_img');
+        
+        // Navigation functions
+        function next_page() {
+            if (next_item) {
+                let url = `${url_base}/view/${next_item.user}/${next_item.file}`;
+                if (q) {
+                    url += `?q=${encodeURIComponent(q)}&page=${current_page}`;
+                }
+                window.location.replace(url);
+            }
+        }
+        
+        function prev_page() {
+            if (prev_item) {
+                let url = `${url_base}/view/${prev_item.user}/${prev_item.file}`;
+                if (q) {
+                    url += `?q=${encodeURIComponent(q)}&page=${current_page}`;
+                }
+                window.location.replace(url);
+            }
+        }
+
+        let videoLoadTimeout = null;
+
+        function handleVideoError(video) {
+            console.error('Video loading error:', video.error);
+            clearTimeout(videoLoadTimeout);
+            toast('Video loading failed!', 'error');
+
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+        }
+
+        function go_back() {
+            
+            if (window.parent !== window) {
+                window.parent.close();
+            } else {
+                window.close();
+            }
+        }
+
+        if (file_type == "vid") {
+            media_container.style.opacity = 1;
+            document.addEventListener('visibilitychange', function () {
+                const vid_elem = document.getElementsByTagName('video')[0];
+                if (vid_elem && document.hidden) {
+                    vid_elem.pause();
+                }
+            });
+            
+            // use wheel or swipe to control video progress
+            // Handle wheel input to seek video
+            view_img.addEventListener('wheel', function (event) {
+                event.preventDefault(); // Prevent default zooming behavior
+
+                const delta = event.deltaY;
+                const speed = 0.1; // Adjust this value to control sensitivity
+
+                const newTime = view_img.currentTime + (delta * speed);
+                view_img.currentTime = Math.max(0, Math.min(newTime, view_img.duration));
+            });
+            // Handle left and right arrow keys to seek video
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'ArrowLeft') {
+                    view_img.currentTime -= 2; // Seek 5 seconds backward
+                } else if (event.key === 'ArrowRight') {
+                    view_img.currentTime += 2; // Seek 5 seconds forward
+                }
+            });
+
+            // Handle swipe gestures on touch devices
+            let startX, startY;
+
+            view_img.addEventListener('touchstart', function (event) {
+                startX = event.touches[0].clientX;
+                startY = event.touches[0].clientY;
+            });
+
+            var debouce_timeout = null;
+
+            function touch_move_event(event) {
+                if (debouce_timeout) {
+                    return;
+                }
+                const endX = event.touches[0].clientX;
+                const deltaX = endX - startX;
+                if (deltaX < 5) return;
+
+                // Horizontal swipe
+                const swipeDistance = deltaX;
+                const speed = -0.05; // Adjust this value to control sensitivity
+                const newTime = view_img.currentTime - (swipeDistance * speed);
+                view_img.currentTime = Math.max(0, Math.min(newTime, view_img.duration));
+                startX = endX;
+                debouce_timeout = setTimeout(function () {
+                    debouce_timeout = null;
+                }, 100);
+            }
+
+
+            view_img.addEventListener('touchmove', touch_move_event);
+
+            view_img.addEventListener('touchend', function (event) {
+                //todo
+            })
+            // move all .hamburger_btn up to avoid being covered by mobile browser ui
+            function adjust_hamburger_position() {
+                const buttons = document.getElementsByClassName('hamburger_btn');
+                const bottom = "4rem";
+                for (let i = 0; i < buttons.length; i++) {
+                    buttons[i].style.bottom = bottom;
+                }
+            }
+            adjust_hamburger_position();
+
+        }
+        else if (file_type == "img") {
+            var zoom = Panzoom(view_img, {
+                animate: false, maxScale: 8, minScale: 0.05,
+                setTransform: (elem, { scale, x, y }) => {
+                    zoom.setStyle('transform', `scale(${scale}) translate(${x}px, ${y}px)`)
+                    zoom.setStyle('transition', 'transition: opacity 0.2s')
+                }
+            })
+            view_img.addEventListener('wheel', zoom.zoomWithWheel);
+            
+            if(view_img.complete) {
+                media_container.style.opacity = 1;
+            }
+            else{
+                view_img.onload = function () {
+                    media_container.style.opacity = 1;
+                }
+            }
+            click_start_time = 0;
+            view_img.addEventListener('pointerdown', function (event) {
+                if (Date.now() - click_start_time < 500) {
+                    // double click
+                    toggle_fullscreen();
+                    click_start_time = 0;
+                } else {
+                    click_start_time = Date.now();
+                }
+                    
+            });
+        }
+        else {
+            media_container.style.opacity = 1;
+        }
+        function add_fav() {
+            fetch('{{url_base}}/add_fav?post_id={{ post_id }}', { method: 'GET' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.fav) {
+                        document.getElementById('fav_icon').src = '{{url_base}}/static/star.svg';
+                    } else {
+                        document.getElementById('fav_icon').src = '{{url_base}}/static/star_holo.svg';
+                    }
+                })
+        }
+
+        // capture esc key, history.back()
+        document.addEventListener('keydown', function (event) {
+            console.log(event.key);
+            if (event.key == 'Escape') {
+                console.log('esc');
+                setTimeout(() => { go_back() }, 100)
+            }
+            // F key for fullscreen
+            else if (event.key == 'f' || event.key == 'F') {
+                toggle_fullscreen();
+            }
+            // Arrow keys for navigation
+            else if (event.key == 'ArrowRight') {
+                next_page();
+            }
+            else if (event.key == 'ArrowLeft') {
+                prev_page();
+            }
+        });
+    </script>
+    {% if file_type!="flash" %}
+    <div id="prev_btn" class="page_btn" onclick="prev_page()" onpointerenter="show_prev_btn()">
+        <img class="icon" src="{{url_base}}/static/left2.svg">
+    </div>
+    <div id="next_btn" class="page_btn" onclick="next_page()" onpointerenter="show_next_btn()">
+        <img class="icon" src="{{url_base}}/static/right2.svg">
+    </div>
+    {% endif %}
+    <script src="{{url_base}}/static/noreferer.js"></script>
+</body>
+
+</html>

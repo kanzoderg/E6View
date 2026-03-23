@@ -1,0 +1,79 @@
+<html>
+
+<head>
+    <title> - </title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/index.css">
+    <link rel="stylesheet" type="text/css" href="{{url_base}}/static/style.css">
+</head>
+
+<body style="padding: 2rem;">
+    <div id="header">
+        <div id="banner">
+            <div id="logo">
+                <a id="title" href="{{url_base}}">E6</a>
+                <span id="title2">
+                    <img class="icon" src="{{url_base}}/static/tag.svg" style="height: 1.5rem;">All Tags
+                </span>
+            </div>
+            <div class="hamburger_btn" onclick="toggle_menu()">
+                <img class="icon" src="{{url_base}}/static/menu.svg">
+            </div>
+        </div>
+    </div>
+
+    <div id="menu_backdrop" onclick="hide_menu()" onmousewheel="hide_menu()"></div>
+    <div id="menu">
+        <a class="long_btn" href="{{url_base}}?tags=fav:me">
+            <img class="icon" src="{{url_base}}/static/star_holo.svg">
+            <span>Favorites</span>
+        </a>
+
+        <a class="long_btn" href="{{url_base}}/pools">
+            <img class="icon" src="{{url_base}}/static/pool.svg">
+            <span>All Pools</span>
+        </a>
+
+        <a id="external_link" class="long_btn" href="https://e621.net/help/tags" target="_blank">
+            <img class="icon" src="{{url_base}}/static/external.svg">
+            <span>e621 Help:Tags</span>
+        </a>
+
+        <a class="long_btn" href="{{url_base}}/downloader" target="_blank">
+            <img class="icon" src="{{url_base}}/static/download.svg">
+            <span>Downloader</span>
+        </a>
+
+    </div>
+
+    <div id="content">
+        <h3>Special tags:</h3>
+        <br>
+        <div style="font-size: 1.1rem;">
+            <a href="{{url_base}}/?tags=order:score" class="tag">order:score</a> : sort by score.<br>
+            <a href="{{url_base}}/?tags=order:random" class="tag">order:random</a> : random order.<br>
+            <a href="{{url_base}}/?tags=order:id" class="tag">order:id</a> : sort by post ID, this is the default
+            behavior.<br>
+            <a href="{{url_base}}/?tags=fav:me" class="tag">fav:me</a> : show all your favorites.<br>
+            <a class="tag">-{tag}</a> : exclude a tag from the search.<br>
+            <a class="tag">by</a> : for auto completion only, display all artists when entered into search bar, should
+            <span style="color: crimson;">not</span> be included in the final search.<br>
+        </div>
+        <br>
+        <h3>All tags</h3>
+        <br>
+        <span style="color: #aaa; font-size: 0.8rem;">(only top 1000 are shown so that your browser doesn't lag)</span>
+        <br>
+        <div id="all_tags">
+            {% for tag in tags[:1000] %}
+            <a href="{{url_base}}/?tags={{tag[0]}}" class="tag" target="_blank">{{tag[0]}} <span
+                    class="count">{{tag[1]}}</span> </a>
+            {% endfor %}
+        </div>
+    </div>
+    <script src="{{url_base}}/static/script.js"></script>
+    <script src="{{url_base}}/static/noreferer.js"></script>
+</body>
+
+</html>
