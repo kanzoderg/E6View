@@ -2,7 +2,7 @@ media_container = document.getElementById('media_container');
 
 function download_from_live(tags) {
     if (tags) {
-        fetch('/'+url_base+'/downloader', {
+        fetch(url_base + '/downloader', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
